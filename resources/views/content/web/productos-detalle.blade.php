@@ -1,179 +1,269 @@
 @php
-    // Variables recibidas: $producto, $marcas, $productos_ban, $related
-    $marcas = $marcas ?? App\Models\Marca::where('active', true)->orderBy('orden')->get();
-    // Preparar colección de fotos: foto general primero, luego galería (sin duplicados)
-    $allFotos = collect();
-    if(!empty($producto->foto)) {
-        $allFotos->push((object)['foto' => $producto->foto]);
-    }
-    if(isset($producto->fotos) && $producto->fotos->count() > 0) {
-        foreach($producto->fotos as $f) {
-            if(empty($producto->foto) || ($f->foto != $producto->foto)) {
-                $allFotos->push($f);
-            }
+    $producto = App\Models\Producto::where('active', true)->findOrFail($id);
+
+    // Tapas por grupo: nombre del grupo => filas. En el HTML y el script cada grupo se identifica por su posición.
+    $grupos = $producto->gruposDeTapas()->values();
+    $nombresGrupo = $producto->gruposDeTapas()->keys();
+
+    // Datos para el script: una entrada por tapa
+    $tapas = [];
+    foreach ($grupos as $g => $filas) {
+        foreach ($filas as $i => $fila) {
+            $tapas[] = [
+                'grupo'       => $g,
+                'indice'      => $i,
+                'color'       => $fila['color'],
+                'foto'        => $fila['foto'] ?? null,
+                'descripcion' => $fila['descripcion'],
+            ];
         }
     }
+
+    // Al entrar no hay ninguna tapa elegida: se ve la foto del producto
+    $fotoInicial = $producto->foto;
+
+    $etiqueta = 'text-[14px] font-bold leading-[1.5] text-dark/60';
+    $caja = 'h-[41px] w-full bg-white border border-linea rounded-[12px] text-[14px] leading-[1.5] text-[#1C1710]';
+    $tituloDato = 'text-[20px] font-bold leading-[1.5] tracking-[-0.4px] text-[#303030]';
+    $textoDato = 'text-[16px] leading-[1.5] tracking-[-0.32px] text-[#303030]';
 @endphp
 
 @extends('layouts.web')
 
-@section('title', $producto->nombre ?? 'Producto')
+@section('title', $producto->t('nombre'))
 
 @section('content')
 
-{{-- Breadcrumb minimalista --}}
-<div class="w-full bg-white  text-[12px] pt-4">
-    <div class="max-w-[1366px] mx-auto px-[5%] md:px-[71px]">
-        <span class="font-medium">Inicio</span> 
-        <span class="font-medium mx-1">&gt;</span> 
-        <span class="font-medium">Productos</span> 
-        <span class="font-medium mx-1">&gt;</span> 
-        <span class="font-normal">{{ $producto->nombre }}</span>
-    </div>
-</div>
+<section class="contenedor pt-[24px] pb-[94px]">
+    {{-- migas --}}
+    <nav class="text-[12px] leading-[1.5] text-[#303030]">
+        <a href="{{ route('home') }}" class="font-bold">Inicio</a> /
+        <a href="{{ route('productos') }}" class="font-bold">Productos</a> /
+        <span>{{ $producto->t('nombre') }}</span>
+    </nav>
 
-<div class="h-auto letra mx-auto px-[5%] md:px-[71px] max-w-[1366px] pt-6 pb-[80px]">
-    <div class="w-full flex flex-col lg:flex-row gap-[50px] items-start">
+    <form action="{{ route('presupuesto.agregar') }}" method="POST"
+          class="mt-[40px] lg:mt-[78px] grid grid-cols-1 lg:grid-cols-[600px_minmax(0,600px)] gap-x-[24px] gap-y-[31px]">
+        @csrf
+        <input type="hidden" name="producto_id" value="{{ $producto->id }}">
 
-        {{-- Galería y foto principal (Invertido el orden para que las miniaturas queden a la izquierda en desktop) --}}
-        <div class="w-full lg:w-[60%] flex flex-col-reverse lg:flex-row gap-4">
-            
-            {{-- Miniaturas laterales --}}
-            <div class="w-full lg:w-[15%] flex flex-row lg:flex-col gap-3">
-                @if($allFotos->count() > 0)
-                    @foreach($allFotos as $idx => $foto)
-                        <div class="w-[70px] h-[70px] border border-gray-200 rounded-[8px] p-1 flex items-center justify-center cursor-pointer hover:border-gray-400 transition thumb-wrapper {{ $idx === 0 ? ' ' : '' }}" data-src="{{ asset($foto->foto) }}">
-                            <img src="{{ asset($foto->foto) }}" alt="{{ $producto->nombre }}" class="w-full h-full object-contain thumb-img" data-src="{{ asset($foto->foto) }}">
+        {{-- foto principal --}}
+        <div class="w-full max-w-[600px] h-[320px] sm:h-[496px] border-2 border-linea rounded-[12px] overflow-hidden bg-white">
+            <img id="foto-principal" src="{{ $fotoInicial }}" alt="{{ $producto->t('nombre') }}"
+                 class="w-full h-full object-contain {{ $fotoInicial ? '' : 'hidden' }}">
+        </div>
+
+        {{-- datos --}}
+        <div class="flex flex-col lg:min-h-[496px]">
+            <h1 class="lg:mt-[29px] font-sora font-bold text-[32px] leading-[1.2]">{{ $producto->t('nombre') }}</h1>
+            <hr class="mt-[5px] border-linea">
+
+            <div class="mt-[17px] grid grid-cols-1 sm:grid-cols-[311px_1fr] gap-y-[11px]">
+                @if ($producto->t('caracteristicas'))
+                    <div class="flex gap-[9px]">
+                        <img src="{{ asset('assets/img/icons/lista.svg') }}" alt="" width="27" height="27" class="w-[27px] h-[27px] mt-[4px] shrink-0 self-start">
+                        <div>
+                            <h2 class="{{ $tituloDato }}">Características</h2>
+                            <div class="{{ $textoDato }}">{!! $producto->t('caracteristicas') !!}</div>
                         </div>
-                    @endforeach
-                @else
-                    <div class="w-[70px] h-[70px] border border-gray-200 rounded-[8px] p-1 flex items-center justify-center cursor-pointer">
-                        <div class="text-gray-300 text-xs">Sin imagen</div>
+                    </div>
+                @endif
+
+                @if ($producto->t('medidas'))
+                    <div class="flex gap-[9px] sm:pt-[4px]">
+                        <img src="{{ asset('assets/img/icons/ruler.svg') }}" alt="" width="24" height="24" class="w-[24px] h-[24px] mt-[3px] shrink-0 self-start">
+                        <div>
+                            <h2 class="{{ $tituloDato }}">Medidas</h2>
+                            <div class="{{ $textoDato }}">{!! $producto->t('medidas') !!}</div>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($producto->t('packaging'))
+                    <div class="flex gap-[9px]">
+                        <img src="{{ asset('assets/img/icons/package.svg') }}" alt="" width="24" height="24" class="w-[24px] h-[24px] mt-[3px] shrink-0 self-start">
+                        <div>
+                            <h2 class="{{ $tituloDato }}">Packaging</h2>
+                            <p class="{{ $textoDato }}">{{ $producto->t('packaging') }}</p>
+                        </div>
+                    </div>
+                @endif
+
+                @if (isset(\App\Models\Producto::APTOS[$producto->apto]))
+                    <div class="flex gap-[7px]">
+                        <img src="{{ asset('assets/img/icons/apto-' . $producto->apto . '.svg') }}" alt="" width="26" height="26" class="w-[26px] h-[26px] mt-[3px] shrink-0 self-start">
+                        <h2 class="{{ $tituloDato }}">{{ \App\Models\Producto::APTOS[$producto->apto] }}</h2>
                     </div>
                 @endif
             </div>
 
-            {{-- Contenedor de la Imagen Principal --}}
-            <div class="w-full lg:w-[85%] bg-white border border-gray-200 rounded-[12px] p-4 flex items-center justify-center">
-                <div class="w-full lg:w-[510px] lg:h-[400px] flex items-center justify-center bg-white">
-                    @if($allFotos->count() > 0)
-                        <img id="main-image" src="{{ asset($allFotos->first()->foto) }}" alt="{{ $producto->nombre }}" class="w-full h-full object-contain">
-                    @else
-                        <div class="w-full h-full flex items-center justify-center text-gray-300">Sin imagen</div>
-                    @endif
-                </div>
-            </div>
+            @if ($producto->t('nota'))
+                <p class="mt-[24px] lg:mt-auto flex gap-[9px] {{ $textoDato }}">
+                    <img src="{{ asset('assets/img/icons/info.svg') }}" alt="" width="24" height="24" class="w-[24px] h-[24px] shrink-0 self-center">
+                    <span><span class="font-semibold">NOTA:</span> {{ $producto->t('nota') }}</span>
+                </p>
+            @endif
+            <hr class="mt-[7px] border-linea {{ $producto->t('nota') ? '' : 'lg:mt-auto' }}">
         </div>
 
-        {{-- Información del producto (Derecha) --}}
-        <div class="w-full lg:w-[40%] flex flex-col justify-between h-full min-h-[450px]">
-            <div>
-                {{-- Código destacado en rojo oscuro --}}
-                <div class="text-[18px] text-[#A30D11] font-bold mb-3">{{ $producto->codigo }}</div>
-                
-                {{-- Título principal --}}
-                <h1 class="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-6">{{ $producto->nombre }}</h1>
-
-                {{-- Tabla limpia de especificaciones --}}
-                <div class="bg-white border-t border-b border-gray-200 overflow-hidden mb-8">
-                    <table class="w-full text-[14px]">
-                        <tbody>
-                            <tr class="border-b border-gray-100">
-                                <td class="py-3 text-gray-500 font-normal w-1/3">Marca</td>
-                                <td class="py-3 text-[#1A1A1A] text-right font-normal">{{ optional($producto->marca)->nombre ?? optional($producto->marca)->texto ?? 'Mercedes Benz' }}</td>
-                            </tr>
-                            @if(!empty($producto->largo))
-                            <tr class="border-b border-gray-100">
-                                <td class="py-3 text-gray-500 font-normal">Largo</td>
-                                <td class="py-3 text-[#1A1A1A] text-right font-normal">{{ $producto->largo }}mm</td>
-                            </tr>
+        {{-- tapa elegida de cada grupo, con su texto explicativo --}}
+        <div class="flex flex-col gap-[24px] order-last lg:order-none">
+            @foreach ($grupos as $g => $filas)
+                <div data-resumen="{{ $g }}" class="hidden">
+                    <h3 class="{{ $etiqueta }} uppercase">{{ $nombresGrupo[$g] }}</h3>
+                    <div class="mt-[5px] flex gap-[12px]">
+                        <div class="resumen-foto w-[92px] h-[80px] shrink-0 border border-linea rounded-[4px] overflow-hidden bg-fondo">
+                            @if (!empty($filas[0]['foto']))
+                                <img src="{{ $filas[0]['foto'] }}" alt="" class="w-full h-full object-cover">
                             @endif
-                            @if(!empty($producto->alambre) || !empty($producto->diametro))
-                            <tr>
-                                <td class="py-3 text-gray-500 font-normal">ØAlambre</td>
-                                <td class="py-3 text-[#1A1A1A] text-right font-normal">{{ $producto->alambre ?? $producto->diametro ?? '' }}mm</td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
+                        </div>
+                        <p class="resumen-texto mt-[6px] {{ $textoDato }}">{{ $filas[0]['descripcion'] }}</p>
+                    </div>
                 </div>
-            </div>
+            @endforeach
+        </div>
 
-            {{-- Botones de Acción inferiores --}}
-            <div class="flex flex-col sm:flex-row gap-3 mt-auto">
-                @if(!empty($producto->archivo))
-                    <a href="{{ asset($producto->archivo) }}" target="_blank" class="w-full sm:w-1/2 text-center py-3 border border-[#E1251B] text-[#E1251B] font-semibold rounded-[8px] hover:bg-[#E1251B] hover:text-white transition text-[15px]">Ver ficha técnica</a>
+        {{-- tapas, selectores y botón --}}
+        <div class="flex flex-col">
+            @foreach ($grupos as $g => $filas)
+                <div class="mb-[24px]">
+                    <h3 class="{{ $etiqueta }} uppercase">{{ $nombresGrupo[$g] }}</h3>
+                    <div class="mt-[5px] grid grid-cols-5 gap-[8px] max-w-[496px]">
+                        @foreach ($filas as $i => $fila)
+                            @php $color = $fila['color']; @endphp
+                            <button type="button" class="tapa h-[80px] rounded-[4px] overflow-hidden bg-fondo border border-linea text-[12px] text-dark/70"
+                                    data-grupo="{{ $g }}" data-indice="{{ $i }}" title="{{ $color }}">
+                                @if (!empty($fila['foto']))
+                                    <img src="{{ $fila['foto'] }}" alt="{{ $color }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ $color }}
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+
+            <div class="mt-[12px] flex flex-wrap items-end justify-between gap-x-[8px] gap-y-[24px]">
+                <div class="flex flex-wrap items-end gap-[24px]">
+                @if ($grupos->isNotEmpty())
+                    <label class="min-w-[124px] max-w-full">
+                        <span class="{{ $etiqueta }}">TAPA</span>
+                        <select id="select-tapa" name="tapa" class="mt-[7px] appearance-none pl-[15px] pr-[36px] bg-no-repeat bg-[right_12px_center] {{ $caja }}"
+                                style="background-image: url('{{ asset('assets/img/icons/chevron-down.svg') }}')">
+                            <option value="">Elegir</option>
+                            @foreach ($nombresGrupo as $nombre)
+                                <option value="{{ $nombre }}" title="{{ $nombre }}">{{ App\Models\Producto::grupoCorto($nombre) }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label class="w-[124px]">
+                        <span class="{{ $etiqueta }}">COLOR</span>
+                        <select id="select-color" name="color" class="mt-[7px] appearance-none pl-[15px] pr-[36px] bg-no-repeat bg-[right_12px_center] {{ $caja }}"
+                                style="background-image: url('{{ asset('assets/img/icons/chevron-down.svg') }}')"><option value="">Elegir</option></select>
+                    </label>
                 @endif
 
-                <a href="{{ route('contacto') }}" class="w-full sm:w-1/2 text-center py-3 bg-[#E1251B] text-white font-semibold rounded-[8px] hover:bg-[#C81E14] transition text-[15px]">Solicitar presupuesto</a>
+                <div class="w-[124px]">
+                    <span class="{{ $etiqueta }}">CANTIDAD</span>
+                    <div class="mt-[7px] flex items-center justify-between px-[15px] {{ $caja }}">
+                        <button type="button" id="cantidad-menos" aria-label="Restar">
+                            <img src="{{ asset('assets/img/icons/minus.svg') }}" alt="" width="16" height="16">
+                        </button>
+                        <input id="cantidad" type="number" name="cantidad" value="100" min="1"
+                               class="w-[50px] text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+                        <button type="button" id="cantidad-mas" aria-label="Sumar">
+                            <img src="{{ asset('assets/img/icons/plus.svg') }}" alt="" width="16" height="16">
+                        </button>
+                    </div>
+                </div>
+                </div>
+
+                <button type="submit" class="btn-ppal w-[156px] h-[39px]">Consultar</button>
             </div>
         </div>
-
-    </div>
-
-    {{-- Sección de Productos relacionados --}}
-    <div class="mt-20">
-        <h2 class="text-[22px] font-bold text-[#1A1A1A] mb-6">Productos relacionados</h2>
-
-        <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @forelse($related as $r)
-                <a href="{{ route('productos.detalle', ['id' => $r->id]) }}" class="border border-gray-200 rounded-[12px] overflow-hidden bg-white flex flex-col justify-between transition-all duration-300 hover:shadow-lg p-5 group">
-                    {{-- Contenedor imagen fija --}}
-                    <div class="w-full h-[180px] flex items-center justify-center p-2 bg-white">
-                        @if(!empty($r->foto))
-                            <img src="{{ asset($r->foto) }}" alt="{{ $r->nombre }}" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center text-gray-300 text-xs">Sin imagen</div>
-                        @endif
-                    </div>
-                    {{-- Datos --}}
-                    <div class="mt-4 pt-4 border-t border-gray-50/50">
-                        <div class="text-[14px] text-[#A30D11] font-bold mb-1">{{ $r->codigo }}</div>
-                        <div class="text-[14px] font-medium text-[#1A1A1A] line-clamp-2 min-h-[40px] leading-snug">{{ $r->nombre }}</div>
-                    </div>
-                </a>
-            @empty
-                <div class="text-gray-500 col-span-3 py-4">No hay productos relacionados.</div>
-            @endforelse
-        </div>
-    </div>
-
-</div>
+    </form>
+</section>
 
 @endsection
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const main = document.getElementById('main-image');
-    if (!main) return;
-    const thumbWrappers = Array.from(document.querySelectorAll('.thumb-wrapper'));
-    if (thumbWrappers.length === 0) return;
+document.addEventListener('DOMContentLoaded', () => {
+    const tapas = @json($tapas);
+    const fotoProducto = @json($producto->foto);
+    const fotoPrincipal = document.getElementById('foto-principal');
+    const selectTapa = document.getElementById('select-tapa');
+    const selectColor = document.getElementById('select-color');
 
-    // add a small CSS rule for selected thumb
-    const styleId = 'thumb-selected-style';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = '.selected-thumb{ box-shadow: 0 0 0 3px rgba(225,37,27,0.12); border-color: #E1251B !important; }';
-        document.head.appendChild(style);
+    let seleccion = null; // { grupo, indice } o null si no hay ninguna tapa elegida
+
+    // Estado sin tapa elegida: foto del producto, sin resumen, selectores vacíos
+    const deseleccionar = () => {
+        seleccion = null;
+        document.querySelectorAll('.tapa').forEach(b => {
+            b.classList.remove('border-2', 'border-celeste');
+            b.classList.add('border-linea');
+        });
+        if (fotoProducto) {
+            fotoPrincipal.src = fotoProducto;
+            fotoPrincipal.classList.remove('hidden');
+        } else {
+            fotoPrincipal.classList.add('hidden');
+        }
+        document.querySelectorAll('[data-resumen]').forEach(r => r.classList.add('hidden'));
+        selectTapa.selectedIndex = 0;
+        selectColor.innerHTML = '';
+        selectColor.add(new Option('Elegir', ''));
+    };
+
+    // Elige una tapa: marca la miniatura, cambia la foto principal, el resumen y los selectores
+    const elegir = (grupo, indice) => {
+        const tapa = tapas.find(t => t.grupo === grupo && t.indice === indice);
+        if (!tapa) return;
+        seleccion = { grupo, indice };
+
+        document.querySelectorAll('.tapa').forEach(b => {
+            const activa = Number(b.dataset.grupo) === grupo && Number(b.dataset.indice) === indice;
+            b.classList.toggle('border-2', activa);
+            b.classList.toggle('border-celeste', activa);
+            b.classList.toggle('border-linea', !activa);
+        });
+
+        const foto = tapa.foto || fotoProducto;
+        if (foto) {
+            fotoPrincipal.src = foto;
+            fotoPrincipal.classList.remove('hidden');
+        }
+
+        // Solo se muestra el resumen del grupo elegido
+        document.querySelectorAll('[data-resumen]').forEach(r => r.classList.toggle('hidden', Number(r.dataset.resumen) !== grupo));
+
+        const resumen = document.querySelector(`[data-resumen="${grupo}"]`);
+        resumen.querySelector('.resumen-foto').innerHTML = tapa.foto ? `<img src="${tapa.foto}" alt="" class="w-full h-full object-cover">` : '';
+        resumen.querySelector('.resumen-texto').textContent = tapa.descripcion || '';
+
+        selectTapa.selectedIndex = grupo + 1; // la primera opción es "Elegir"
+        selectColor.innerHTML = '';
+        tapas.filter(t => t.grupo === grupo).forEach(t => selectColor.add(new Option(t.color, t.color, false, t.indice === indice)));
+    };
+
+    if (tapas.length) {
+        // Clic en la tapa ya elegida: se deselecciona
+        document.querySelectorAll('.tapa').forEach(b => b.addEventListener('click', () => {
+            const grupo = Number(b.dataset.grupo), indice = Number(b.dataset.indice);
+            if (seleccion && seleccion.grupo === grupo && seleccion.indice === indice) deseleccionar();
+            else elegir(grupo, indice);
+        }));
+        selectTapa.addEventListener('change', () => selectTapa.selectedIndex === 0 ? deseleccionar() : elegir(selectTapa.selectedIndex - 1, 0));
+        selectColor.addEventListener('change', () => seleccion && elegir(seleccion.grupo, selectColor.selectedIndex));
+        deseleccionar();
     }
 
-    // initialize selected on first thumb
-    thumbWrappers.forEach((t, i) => {
-        if (i === 0) t.classList.add('selected-thumb');
-        t.addEventListener('click', function (e) {
-            e.preventDefault();
-            const img = this.querySelector('img.thumb-img');
-            const src = this.getAttribute('data-src') || img?.getAttribute('data-src') || img?.getAttribute('src');
-            if (!src) return;
-            // change main image
-            main.setAttribute('src', src);
-            // update selected class
-            thumbWrappers.forEach(x => x.classList.remove('selected-thumb'));
-            this.classList.add('selected-thumb');
-        });
-    });
+    const cantidad = document.getElementById('cantidad');
+    document.getElementById('cantidad-menos').addEventListener('click', () => cantidad.value = Math.max(1, (parseInt(cantidad.value) || 1) - 1));
+    document.getElementById('cantidad-mas').addEventListener('click', () => cantidad.value = (parseInt(cantidad.value) || 0) + 1);
 });
 </script>
 @endsection

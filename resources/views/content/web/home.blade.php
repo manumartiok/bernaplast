@@ -1,173 +1,143 @@
 @php
-    // $home_banners = App\Models\HomeBanner::where('active', true)->orderBy('orden')->get();
-    // $home = App\Models\Home::first();
-
-    // $novedades = App\Models\Novedade::where('active', true)
-    //     ->where('destacado', true)
-    //     ->orderBy('orden')
-    //     ->get(); 
+    $home = App\Models\Home::first() ?? new App\Models\Home();
+    $slides = App\Models\HomeBanner::where('active', true)->orderBy('orden')->get();
+    $destacados = App\Models\Producto::where('active', true)->where('destacado', true)->orderBy('orden')->limit(4)->get();
+    $novedades = App\Models\Novedade::with('categoria')->where('active', true)->where('destacado', true)->orderBy('orden')->limit(3)->get();
+    $clientes = App\Models\Cliente::where('active', true)->orderBy('orden')->limit(6)->get();
 @endphp
 
 @extends('layouts.web')
 
-@section('title', 'Inicio')
+@section('title', 'Bernaplast')
+
 @section('content')
 
-<div class="letra">
-    {{-- CARRUSEL BANNER --}}
-    {{-- <div id="bannerCarousel" class="relative w-full h-[768px] overflow-hidden z-10">
-
-        @foreach($home_banners as $index => $banner)
-            <div class="carousel-slide absolute inset-0 transition-opacity duration-500 
-                {{ $index === 0 ? 'opacity-100' : 'opacity-0' }}"> --}}
-                
-                {{-- VIDEO O IMAGEN --}}
-                {{-- @if (($banner->tipo_medio ?? 'imagen') === 'video')
-                    <video class="absolute top-0 left-0 w-full h-full object-cover" autoplay muted loop playsinline>
-                        <source src="{{ asset($banner->video ?? $banner->foto) }}" type="video/mp4">
-                        Tu navegador no soporta video HTML5.
-                    </video>
+{{-- banner --}}
+<section class="relative h-[520px] md:h-[678px] bg-dark overflow-hidden">
+    @foreach ($slides as $i => $slide)
+        <div class="slide absolute inset-0 transition-opacity duration-700 {{ $i === 0 ? 'opacity-100' : 'opacity-0 pointer-events-none' }}">
+            @if ($slide->foto)
+                @if ($slide->tipo_medio === 'video')
+                    <video src="{{ $slide->foto }}" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover"></video>
                 @else
-                    <div class="absolute top-0 left-0 w-full h-full bg-cover bg-center"
-                        style="background-image: url('{{ asset($banner->foto) }}')">
-                    </div>
+                    <img src="{{ $slide->foto }}" alt="" class="absolute inset-0 w-full h-full object-cover">
                 @endif
+            @endif
 
-                <div class="absolute inset-0 bg-black/40 z-5"></div> --}}
-
-                {{-- CONTENIDO (MISMO DISEÑO QUE TENÍAS) --}}
-                {{-- <div class="relative h-full max-w-[1366px] mx-auto px-[5%] md:px-[71px] flex flex-col items-center text-white z-20">
-                    <h3 class="text-[48px] font-semibold  mt-[304px]">
-                        {{ $banner->titulo }}
-                    </h3>
-
-                    <h1 class="text-[20px]">
-                        {!! $banner->texto !!}
-                    </h1>
-                </div>
+            <div class="contenedor relative h-full flex flex-col justify-center md:justify-start md:pt-[262px]">
+                <h1 class="font-sora font-bold text-white text-[40px] md:text-[48px] leading-[1.2] max-w-[582px]">{{ $slide->titulo }}</h1>
+                <p class="mt-[1px] text-white text-[20px] leading-[1.5] max-w-[539px]">{!! $slide->texto !!}</p>
+                <a href="{{ route('productos') }}" class="btn-ppal w-[184px] mt-[34px]">VER PRODUCTOS</a>
             </div>
-        @endforeach --}}
+        </div>
+    @endforeach
 
-        {{-- BARRAS/PUNTOS DEL CARRUSEL --}}
-        {{-- @if ($home_banners->count() > 1)
-            <div class="absolute bottom-[80px] left-0 right-0 flex justify-center gap-[8px] z-30">
-                @foreach ($home_banners as $index => $banner)
-                    <span class="carousel-dot h-[6px] w-[44px] bg-white/40 cursor-pointer transition-all duration-300 z-50
-                        {{ $index === 0 ? 'bg-white' : '' }}"
-                        data-index="{{ $index }}">
-                    </span>
+    @if ($slides->count() > 1)
+        <div class="absolute bottom-[30px] left-0 w-full">
+            <div class="contenedor flex gap-[10px]">
+                @foreach ($slides as $i => $slide)
+                    <button type="button" class="slide-punto size-[10px] rounded-full {{ $i === 0 ? 'bg-white' : 'bg-white/40' }}" aria-label="Slide {{ $i + 1 }}"></button>
                 @endforeach
             </div>
-        @endif --}}
+        </div>
+    @endif
+</section>
 
+{{-- productos destacados --}}
+@if ($destacados->isNotEmpty())
+<section class="contenedor pt-[80px]">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+            <h2 class="titulo-seccion">{{ $home->titulo_productos }}</h2>
+            <p class="mt-[8px] text-[16px] leading-[1.5] max-w-[582px]">{{ $home->texto_productos }}</p>
+        </div>
+        <a href="{{ route('productos') }}" class="btn-sec shrink-0">Ver todos</a>
     </div>
-    {{-- contenido  --}}
 
-</div>
+    <div class="mt-[24px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[24px] justify-items-center">
+        @foreach ($destacados as $producto)
+            <x-producto-card :producto="$producto" />
+        @endforeach
+    </div>
+</section>
+@endif
+
+{{-- quiénes somos --}}
+<section class="contenedor pt-[80px] pb-[80px] grid grid-cols-1 lg:grid-cols-[599px_1fr] gap-[24px] items-start">
+    <div class="w-full max-w-[599px] h-[300px] md:h-[400px] rounded-[12px] overflow-hidden bg-fondo">
+        @if ($home->foto_nosotros)
+            <img src="{{ $home->foto_nosotros }}" alt="{{ $home->titulo_nosotros }}" class="w-full h-full object-cover">
+        @endif
+    </div>
+    <div class="lg:pt-[13px] max-w-[602px]">
+        <h2 class="font-sora font-bold text-[32px] leading-[1.2]">{{ $home->titulo_nosotros }}</h2>
+        <div class="mt-[22px] text-[15px] leading-[1.5] [&_p+p]:mt-[22px]">{!! $home->texto_nosotros !!}</div>
+        <a href="{{ route('nosotros') }}" class="btn-ppal w-[156px] h-[39px] mt-[44px]">Más info</a>
+    </div>
+</section>
+
+{{-- novedades --}}
+@if ($novedades->isNotEmpty())
+<section class="bg-fondo">
+    <div class="contenedor pt-[40px] pb-[57px]">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+                <h2 class="titulo-seccion">{{ $home->titulo_novedades }}</h2>
+                <p class="mt-[8px] text-[16px] leading-[1.5]">{{ $home->texto_novedades }}</p>
+            </div>
+            <a href="{{ route('novedades') }}" class="btn-sec shrink-0">Ver todas</a>
+        </div>
+
+        <div class="mt-[24px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] justify-items-center">
+            @foreach ($novedades as $novedad)
+                <x-novedad-card :novedad="$novedad" />
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- clientes --}}
+@if ($clientes->isNotEmpty())
+<section class="contenedor pt-[80px] pb-[74px]">
+    <h2 class="titulo-seccion">{{ $home->titulo_clientes }}</h2>
+    <p class="mt-[8px] text-[16px] leading-[1.5]">{{ $home->texto_clientes }}</p>
+
+    <div class="mt-[25px] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-[24px]">
+        @foreach ($clientes as $cliente)
+            <div class="aspect-square max-w-[184px] w-full border border-linea rounded-[6px] overflow-hidden">
+                @if ($cliente->foto)
+                    <img src="{{ $cliente->foto }}" alt="{{ $cliente->t('nombre') }}" class="w-full h-full object-cover">
+                @endif
+            </div>
+        @endforeach
+    </div>
+</section>
+@endif
+
 @endsection
 
+@section('scripts')
+@if ($slides->count() > 1)
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // =============================================
-    // CÓDIGO PARA EL CARRUSEL DE BANNERS
-    // =============================================
-    const carousel = document.getElementById('bannerCarousel');
-    const slides = carousel?.querySelectorAll('.carousel-slide');
-    const dots = carousel?.querySelectorAll('.carousel-dot');
-    
-    if (slides && slides.length > 0) {
-        let currentSlide = 0;
-        let slideInterval;
-        const slideDuration = 5000; // 5 segundos entre slides
+document.addEventListener('DOMContentLoaded', () => {
+    const slides = document.querySelectorAll('.slide');
+    const puntos = document.querySelectorAll('.slide-punto');
+    let actual = 0;
 
-        // Función para mostrar un slide específico
-        function showSlide(index) {
-            // Ocultar todos los slides
-            slides.forEach(slide => {
-                slide.classList.remove('opacity-100');
-                slide.classList.add('opacity-0');
-                slide.style.zIndex = '0';
-            });
-            
-            // Remover clase activa de todos los dots
-            if (dots) {
-                dots.forEach(dot => {
-                    dot.classList.remove('bg-white');
-                    dot.classList.add('bg-white/40');
-                });
-            }
-            
-            // Mostrar slide actual
-            slides[index].classList.remove('opacity-0');
-            slides[index].classList.add('opacity-100');
-            slides[index].style.zIndex = '10';
-            
-            // Activar dot actual
-            if (dots && dots[index]) {
-                dots[index].classList.remove('bg-white/40');
-                dots[index].classList.add('bg-white');
-            }
-            
-            currentSlide = index;
-        }
+    const mostrar = (i) => {
+        slides[actual].classList.replace('opacity-100', 'opacity-0');
+        slides[actual].classList.add('pointer-events-none');
+        puntos[actual].classList.replace('bg-white', 'bg-white/40');
+        actual = i;
+        slides[actual].classList.replace('opacity-0', 'opacity-100');
+        slides[actual].classList.remove('pointer-events-none');
+        puntos[actual].classList.replace('bg-white/40', 'bg-white');
+    };
 
-        // Función para siguiente slide
-        function nextSlide() {
-            let nextIndex = (currentSlide + 1) % slides.length;
-            showSlide(nextIndex);
-        }
-
-        // Función para slide anterior
-        function prevSlide() {
-            let prevIndex = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(prevIndex);
-        }
-
-        // Iniciar autoplay
-        function startAutoplay() {
-            if (slides.length > 1) {
-                slideInterval = setInterval(nextSlide, slideDuration);
-            }
-        }
-
-        // Detener autoplay
-        function stopAutoplay() {
-            clearInterval(slideInterval);
-        }
-
-        // Event listeners para los dots
-        if (dots) {
-            dots.forEach(dot => {
-                dot.addEventListener('click', function() {
-                    const slideIndex = parseInt(this.getAttribute('data-index'));
-                    showSlide(slideIndex);
-                    stopAutoplay();
-                    startAutoplay(); // Reiniciar autoplay después de click manual
-                });
-            });
-        }
-
-        // Pausar autoplay al hacer hover sobre el carrusel
-        carousel.addEventListener('mouseenter', stopAutoplay);
-        carousel.addEventListener('mouseleave', startAutoplay);
-
-        // Navegación con teclado (opcional)
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                prevSlide();
-                stopAutoplay();
-                startAutoplay();
-            } else if (e.key === 'ArrowRight') {
-                nextSlide();
-                stopAutoplay();
-                startAutoplay();
-            }
-        });
-
-        // Inicializar carrusel
-        startAutoplay();
-        // Asegurarse de que el primer slide esté visible
-        showSlide(0);
-    }
+    puntos.forEach((p, i) => p.addEventListener('click', () => mostrar(i)));
+    setInterval(() => mostrar((actual + 1) % slides.length), 6000);
 });
 </script>
+@endif
+@endsection

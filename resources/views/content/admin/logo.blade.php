@@ -24,32 +24,34 @@
 
                 <div>
                     <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2" for="foto">Foto barra de navegacion (recomendado 177x73) / (2MB tamaño máximo)</label>
+                    <label class="block text-gray-700 font-medium mb-2" for="foto">Logo barra de navegación (recomendado 231x77) / (2MB tamaño máximo)</label>
 
                     @if (!empty($logo->foto_nav))
-                        <img :src="foto.foto_nav || '{{ $logo->foto_nav }}'" alt="Foto" class="mb-3 w-full max-w-[177px] h-[73px] object-cover">
+                        <img :src="foto.foto_nav || '{{ $logo->foto_nav }}'" alt="Foto" class="mb-3 w-full max-w-[231px] h-[77px] object-cover">
                     @endif
 
                     <input type="file" name="foto_nav" id="foto_nav" @change="subirFoto"
                         class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     </div>
 
+                    {{-- Logo barra de navegación 2do color: oculto por ahora (la columna foto_nav2 y el controlador siguen listos)
                     <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2" for="foto">Foto barra de navegacion 2do color (recomendado 177x73) / (2MB tamaño máximo)</label>
+                    <label class="block text-gray-700 font-medium mb-2" for="foto">Logo barra de navegación 2do color (recomendado 231x77) / (2MB tamaño máximo)</label>
 
                     @if (!empty($logo->foto_nav2))
-                        <img :src="foto.foto_nav2 || '{{ $logo->foto_nav2 }}'" alt="Foto" class="mb-3 w-full max-w-[177px] h-[73px] object-cover">
+                        <img :src="foto.foto_nav2 || '{{ $logo->foto_nav2 }}'" alt="Foto" class="mb-3 w-full max-w-[231px] h-[77px] object-cover">
                     @endif
 
                     <input type="file" name="foto_nav2" id="foto_nav2" @change="subirFoto"
                         class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     </div>
+                    --}}
 
                      <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2" for="foto">Foto footer (recomendado 210x86) / (2MB tamaño máximo)</label>
+                    <label class="block text-gray-700 font-medium mb-2" for="foto">Logo footer (recomendado 231x77) / (2MB tamaño máximo)</label>
 
                     @if (!empty($logo->foto_footer))
-                        <img :src="foto.foto_footer || '{{ $logo->foto_footer}}'" alt="Foto" class="mb-3 w-full max-w-[210px] h-[86px] object-cover">
+                        <img :src="foto.foto_footer || '{{ $logo->foto_footer}}'" alt="Foto" class="mb-3 w-full max-w-[231px] h-[77px] object-cover">
                     @endif
 
                     <input type="file" name="foto_footer" id="foto_footer" @change="subirFoto"

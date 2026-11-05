@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title','Panel Admin')</title>
   {{-- favicon  --}}
-  <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png')}}">
+  <link rel="icon" type="image/png" href="{{ asset('assets/img/bernaplast.png')}}">
   {{-- jquery --}}
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   {{-- tailwind  --}}

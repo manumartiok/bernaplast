@@ -2,55 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Mail\ContactoMail;
+use App\Models\Contacto;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class FormController extends Controller
 {
     public function contacto(Request $request)
     {
+        $data = $request->validate([
+            'nombre'   => 'required|string|max:255',
+            'telefono' => 'required|string|max:100',
+            'email'    => 'required|email|max:255',
+            'asunto'   => 'nullable|string|max:255',
+            'mensaje'  => 'nullable|string|max:5000',
+        ], [
+            'nombre.required'   => 'Ingresá tu nombre y apellido.',
+            'telefono.required' => 'Ingresá tu teléfono.',
+            'email.required'    => 'Ingresá tu email.',
+            'email.email'       => 'El email no es válido.',
+        ]);
+
+        // Va a la dirección cargada en Contacto desde el admin
+        $destino = Contacto::first()?->mail ?: config('mail.from.address');
+
         try {
-            $request->validate([
-                'nombre' => 'required',
-                'apellido' => 'required',
-                'email' => 'required|email',
-                'mensaje' => 'required',
-            ]);
-
-            $data = $request->all();
-
-            Mail::to('tucorreo@dominio.com')->send(new ContactoMail($data));
-
-            // Si es petición AJAX, retornar JSON
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Tu consulta ha sido enviada exitosamente.'
-                ]);
-            }
-
-            // Si no es AJAX, comportamiento normal
-            return back()->with('success', 'Mensaje enviado correctamente');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Por favor completa todos los campos requeridos.'
-                ], 422);
-            }
-            throw $e;
-
+            Mail::to($destino)->send(new ContactoMail($data));
         } catch (\Exception $e) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error al enviar la consulta. Por favor, intenta nuevamente.'
-                ], 500);
-            }
-            return back()->with('error', 'Error al enviar el mensaje');
-        }
-    }
+            Log::error('Error al enviar el formulario de contacto: ' . $e->getMessage());
 
+            return back()->withInput()->withErrors(['contacto' => 'No pudimos enviar la consulta. Intentá nuevamente.']);
+        }
+
+        return back()->with('success', 'Recibimos tu consulta. Te vamos a responder a la brevedad.');
+    }
 }

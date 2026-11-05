@@ -21,7 +21,7 @@
                 {{ $errors->first() }}
             </div>
         @endif
-        <div><img src="{{ asset('assets/img/gazpetrol.png')}}" alt="Foto" class="w-[222px] h-[53px]"></div>
+        <div><img src="{{ asset('assets/img/logo-nav.png')}}" alt="Foto" class="w-[231px] h-[100px]"></div>
         <div class="bg-white p-8 w-1/3 rounded-xl shadow-md  mb-[70px]">
             {{-- Login Form --}}
             <form id="loginForm" action="{{ route('login.post') }}" method="POST">

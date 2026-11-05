@@ -1,6 +1,6 @@
 @php
-    $bn = App\Models\Banner::seccion('nosotros');
-     $nosotros = App\Models\Nosotro::first(); 
+    $nosotros = App\Models\Nosotro::first() ?? new App\Models\Nosotro();
+    $valores = $nosotros->valores ?? [];
 @endphp
 
 @extends('layouts.web')
@@ -9,72 +9,37 @@
 
 @section('content')
 
-    
-{{-- banner  --}}
+<x-banner-seccion seccion="nosotros" :migas="['Nosotros' => null]" />
 
-<div class="w-full h-[300px] bg-cover bg-center letra text-white pt-[120px] pb-[70px]" style="background-image: url('{{ $bn->foto }}');">
-    <div class="h-full max-w-[1366px] mx-auto px-[5%] md:px-[71px] flex flex-col justify-between">
-        <h3 class="text-[12px]"><a class="font-bold" href="{{ route('home') }}" >Inicio</a> > Nosotros</h3>
-        <h1 class="text-[32px] font-medium">{{ $bn->t('texto') }}</h1>
+{{-- quiénes somos --}}
+<section class="contenedor pt-[80px] pb-[80px] grid grid-cols-1 lg:grid-cols-[599px_1fr] gap-[24px] items-start">
+    <div class="w-full max-w-[599px] h-[300px] md:h-[400px] rounded-[12px] overflow-hidden bg-fondo">
+        @if ($nosotros->foto)
+            <img src="{{ $nosotros->foto }}" alt="{{ $nosotros->t('titulo') }}" class="w-full h-full object-cover">
+        @endif
     </div>
-</div>
-
-{{-- contenido  --}}
-<div>
-    {{-- nosotros  --}}
-    <div class="h-full letra max-w-[1366px] mx-auto px-[5%] md:px-[71px] pt-[65px] pb-[85px] flex flex-col justify-center">
-        <div class="flex flex-col lg:flex-row w-full gap-[45px] text-center lg:text-start">
-            {{-- Foto  --}}
-            <div class=" w-full lg:min-w-[600px] lg:w-1/2 flex flex-grow ">
-                <img src="{{$nosotros->foto}}" alt="" class="w-full h-[480px] border rounded-[10px]">
-            </div>
-            {{-- texto  --}}
-            <div class="w-full lg:w-1/2 flex flex-col md:mt-[45px]">
-                <p class="text-[32px] max-h-[32px] font-semibold md:ml-[16px] mb-[28px] ">{{$nosotros->texto1}}</p>
-                <h2 class="text-[16px] text-[#74716A]">{!! $nosotros->descripcion !!}</h2>
-            </div>
-        </div>
+    <div class="max-w-[602px]">
+        <h2 class="font-sora font-bold text-[32px] leading-[1.2]">{{ $nosotros->t('titulo') }}</h2>
+        <div class="mt-[17px] text-[15px] leading-[1.5] [&_p+p]:mt-[22px]">{!! $nosotros->t('texto') !!}</div>
     </div>
-    {{-- valores  --}}
-    <div class="h-full w-full bg-[#F5F5F5]">
-        <div class="letra max-w-[1366px] mx-auto px-[5%] md:px-[71px] pt-[40px] pb-[75px] flex flex-col">
-            {{-- encabezado  --}}
-            <div class="flex flex-col text-center lg:text-start">
-                <h2 class="text-[32px] font-medium  mb-[24px]">{{$nosotros->texto2}}</h2>
-            </div>
-            {{-- detalles  --}}
-            <div class="flex flex-col gap-[30px] mb-[30px]">
+</section>
 
-                <div class="w-full flex flex-col lg:flex-row gap-[24px]">
-                    <div class="w-full lg:w-1/3 border rounded-[8px] flex flex-col items-center text-center bg-[#FFFFFF]  h-[392px]  px-[20px] pt-[100px]">
-                        <div class="flex-shrink-0">
-                            <img src="{{$nosotros->icono1}}" alt="" class="mx-auto">
-                        </div>
-                        <h1 class="text-[20px] font-semibold text-[#242424] mt-[40px] mb-[10px]">{{$nosotros->nombre_icono1}}</h1>
-                        <h3 class="text-[16px] text-[#74716A]">{!! $nosotros->texto_icono1 !!}</h3>
-                    </div>
-                    
-                    <div class="w-full lg:w-1/3 border rounded-[8px] flex flex-col items-center text-center bg-[#FFFFFF]  h-[392px]  px-[20px] pt-[100px]">
-                        <div class="flex-shrink-0">
-                            <img src="{{$nosotros->icono2}}" alt="" class="mx-auto">
-                        </div>
-                        <h1 class="text-[20px] font-semibold text-[#242424] mt-[40px] mb-[10px]">{{$nosotros->nombre_icono2}}</h1>
-                        <h3 class="text-[16px] text-[#74716A]">{!! $nosotros->texto_icono2 !!}</h3>
-                    </div>
-                    
-                    <div class="w-full lg:w-1/3 border rounded-[8px] flex flex-col items-center text-center bg-[#FFFFFF]  h-[392px]  px-[20px] pt-[100px]">
-                        <div class="flex-shrink-0">
-                            <img src="{{$nosotros->icono3}}" alt="" class="mx-auto">
-                        </div>
-                        <h1 class="text-[20px] font-semibold text-[#242424] mt-[40px] mb-[10px]">{{$nosotros->nombre_icono3}}</h1>
-                        <h3 class="text-[16px] text-[#74716A]">{!! $nosotros->texto_icono3 !!}</h3>
-                    </div>
+{{-- valores --}}
+@if ($valores)
+<section class="bg-[#ECF1F5]">
+    <div class="contenedor pt-[40px] pb-[64px]">
+        <h2 class="font-sora font-bold text-[32px] leading-[1.2]">{{ $nosotros->t('titulo_valores') }}</h2>
+
+        <div class="mt-[24px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[24px]">
+            @foreach ($valores as $valor)
+                <div class="min-h-[160px] bg-white rounded-[6px] px-[24px] pt-[27px] pb-[24px]">
+                    <h3 class="font-sora font-bold text-[20px] leading-[1.2]">{{ \App\Support\Idiomas::texto($valor['titulo'] ?? '') }}</h3>
+                    <p class="mt-[18px] text-[16px] leading-[1.5] text-[#303030] max-w-[238px]">{{ \App\Support\Idiomas::texto($valor['texto'] ?? '') }}</p>
                 </div>
-                
-            </div>
+            @endforeach
         </div>
     </div>
-</div>
+</section>
+@endif
 
 @endsection
-

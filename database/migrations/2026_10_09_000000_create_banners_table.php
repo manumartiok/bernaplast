@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Tabla única para los banners simples de cada sección (foto + texto).
+ * Tabla única para los banners simples de cada sección (foto + texto + subtítulo).
  * Cada sección es una fila: seccion = 'nosotros', 'novedades', 'contacto', 'productos', ...
  *
  * Reemplaza a nosotro_banners, novedade_banners y contacto_banners:
@@ -30,8 +30,10 @@ return new class extends Migration
 
             if (Idiomas::esMultiple()) {
                 $table->json('texto')->nullable();
+                $table->json('subtitulo')->nullable();
             } else {
                 $table->string('texto')->nullable();
+                $table->string('subtitulo')->nullable();
             }
 
             $table->timestamps();

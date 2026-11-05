@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\GestionaArchivos;
 use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,8 +12,6 @@ use Illuminate\Support\Str;
  */
 class BannerController extends Controller
 {
-    use GestionaArchivos;
-
     public function show(string $seccion)
     {
         return view('content.admin.banner', [
@@ -25,13 +22,9 @@ class BannerController extends Controller
 
     public function update(Request $request, string $seccion)
     {
-        $request->validate([
-            'foto' => 'nullable|image|max:2048',
-        ]);
-
         $banner = Banner::seccion($seccion);
-        $banner->foto = $this->procesarArchivo($request, 'foto', $banner->foto, 'banners');
         $banner->texto = $request->input('texto');
+        $banner->subtitulo = $request->input('subtitulo');
         $banner->save();
 
         return redirect()->route('adm.banner', $seccion)

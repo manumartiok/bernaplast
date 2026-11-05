@@ -2,73 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\GestionaArchivos;
 use App\Models\Home;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
+    use GestionaArchivos;
+
     public function show()
     {
-        $home = Home::first() ?? new Home();
-
-        return view('content.admin.home', compact('home'));
+        return view('content.admin.home', [
+            'item' => Home::firstOrCreate([]),
+        ]);
     }
 
     public function update(Request $request)
     {
-        $request->validate([
-            'titulo1'            => 'nullable|string|max:255',
-            'foto1'              => 'nullable|image|max:2048',
-            'foto1_texto1'       => 'nullable|string|max:255',
-            'foto1_texto2'       => 'nullable|string|max:255',
-            'foto1_texto3'       => 'nullable|string|max:255',
-            'foto1_texto_boton'  => 'nullable|string|max:255',
-            'foto2'              => 'nullable|image|max:2048',
-            'titulo2'            => 'nullable|string|max:255',
-            'descripcion'        => 'nullable|string',
-            'titulo3'            => 'nullable|string|max:255',
-        ]);
+        $this->validar($request);
 
-        $home = Home::first() ?? new Home();
+        $item = Home::firstOrCreate([]);
+        $this->completar($item, $request);
+        $item->save();
 
-        $home->titulo1           = $request->titulo1;
-        $home->foto1_texto1      = $request->foto1_texto1;
-        $home->foto1_texto2      = $request->foto1_texto2;
-        $home->foto1_texto3      = $request->foto1_texto3;
-        $home->foto1_texto_boton = $request->foto1_texto_boton;
-        $home->titulo2           = $request->titulo2;
-        $home->descripcion       = $request->descripcion;
-        $home->titulo3           = $request->titulo3;
-
-        if ($request->hasFile('foto1')) {
-            $this->handleImageUpload($home, $request->file('foto1'), 'foto1');
-        }
-
-        if ($request->hasFile('foto2')) {
-            $this->handleImageUpload($home, $request->file('foto2'), 'foto2');
-        }
-
-        $home->save();
-
-        return redirect()
-            ->route('adm.home')
-            ->with('success', 'Página de inicio actualizada correctamente.');
+        return redirect()->route('adm.home')
+            ->with('success', 'Cambios guardados correctamente.');
     }
 
-    private function handleImageUpload(Home $home, $file, string $field)
+    private function validar(Request $request): void
     {
-        if ($home->$field) {
-            $oldPath = str_replace('/storage/', '', $home->$field);
+        $request->validate([
+            'foto_nosotros' => 'nullable|image|max:2048',
+        ]);
+    }
 
-            if (Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
-            }
-        }
-
-        $name = time() . '_' . $field . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('images', $name, 'public');
-
-        $home->$field = Storage::url($path);
+    private function completar(Home $item, Request $request): void
+    {
+        $item->titulo_productos = $request->input('titulo_productos');
+        $item->texto_productos = $request->input('texto_productos');
+        $item->foto_nosotros = $this->procesarArchivo($request, 'foto_nosotros', $item->foto_nosotros, 'homes');
+        $item->titulo_nosotros = $request->input('titulo_nosotros');
+        $item->texto_nosotros = $request->input('texto_nosotros');
+        $item->titulo_novedades = $request->input('titulo_novedades');
+        $item->texto_novedades = $request->input('texto_novedades');
+        $item->titulo_clientes = $request->input('titulo_clientes');
+        $item->texto_clientes = $request->input('texto_clientes');
     }
 }

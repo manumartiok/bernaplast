@@ -18,12 +18,12 @@
             </div>
             <hr class="my-3">
             
-            <form method="POST" 
+            <form method="POST"
                   action="{{ route('adm.contacto.update') }}">
                 @csrf
 
-                <input type="hidden" 
-                       name="contactos_id" 
+                <input type="hidden"
+                       name="contactos_id"
                        value="{{ $contacto->id ?? '' }}">
 
                  {{-- CAMPOS SUPERIORES (1 COLUMNA) --}}
@@ -31,7 +31,7 @@
 
                     {{-- Mapa --}}
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Mapa (iframe)</label>
+                        <label class="block text-gray-700 font-medium mb-2">Mapa junto al formulario: link de Google Maps o el código &lt;iframe&gt; de "Compartir &gt; Insertar un mapa"</label>
                         <input type="text" name="ubicacion" value="{{ $contacto->ubicacion ?? '' }}"
                             class="w-full border border-gray-300 rounded px-4 py-2">
                     </div>
@@ -39,24 +39,6 @@
 
                 </div>
 
-
-                {{-- COORDENADAS --}}
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Latitud</label>
-                        <input type="text" 
-                               name="latitud" 
-                               value="{{ $contacto->latitud ?? '' }}"
-                               class="w-full border border-gray-300 rounded px-4 py-2">
-                    </div>
-                    <div class="mb-4">   
-                        <label class="block text-gray-700 font-medium mb-2">Longitud</label>
-                        <input type="text" 
-                               name="longitud" 
-                               value="{{ $contacto->longitud ?? '' }}"
-                               class="w-full border border-gray-300 rounded px-4 py-2">
-                    </div>
-                </div>
 
                 {{-- DATOS DE CONTACTO --}}
                 <div class="grid grid-cols-2 gap-6">
@@ -79,27 +61,9 @@
                                class="w-full border border-gray-300 rounded px-4 py-2">
                     </div>
 
-                    {{-- Mail secundario --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Mail 2</label>
-                        <input type="email" 
-                               name="mail2" 
-                               value="{{ $contacto->mail2 ?? '' }}"
-                               class="w-full border border-gray-300 rounded px-4 py-2">
-                    </div>
-
-                    {{-- Mail terciario --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Mail 3</label>
-                        <input type="email" 
-                               name="mail3" 
-                               value="{{ $contacto->mail3 ?? '' }}"
-                               class="w-full border border-gray-300 rounded px-4 py-2">
-                    </div>
-
                     {{-- Teléfono --}}
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Teléfono</label>
+                        <label class="block text-gray-700 font-medium mb-2">Teléfono consultas</label>
                         <input type="text" 
                                name="telefono" 
                                value="{{ $contacto->telefono ?? '' }}"
@@ -108,7 +72,7 @@
 
                     {{-- Teléfono secundario --}}
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Teléfono 2</label>
+                        <label class="block text-gray-700 font-medium mb-2">Teléfono ventas</label>
                         <input type="text" 
                                name="telefono2" 
                                value="{{ $contacto->telefono2 ?? '' }}"
@@ -122,16 +86,6 @@
                             name="instagram"
                             value="{{ $contacto->instagram ?? '' }}"
                             placeholder="https://www.instagram.com/usuario"
-                            class="w-full border border-gray-300 rounded px-4 py-2">
-                    </div>
-
-                    {{-- Facebook --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">Facebook</label>
-                        <input type="text"
-                            name="facebook"
-                            value="{{ $contacto->facebook ?? '' }}"
-                            placeholder="https://www.facebook.com/pagina"
                             class="w-full border border-gray-300 rounded px-4 py-2">
                     </div>
 
@@ -152,6 +106,8 @@
                 </button>
 
             </form>
-        </div>            
+        </div>
     </div>
+
+    @include('includes.modulo-scripts')
 @endsection

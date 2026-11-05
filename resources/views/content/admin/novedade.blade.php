@@ -24,9 +24,10 @@
                 <thead class="bg-gray-100">
                     <tr class="text-gray-700 text-sm uppercase">
                         <th class="px-4 py-3 text-left">Orden</th>
-                        <th class="px-4 py-3 text-left">Título</th>
-                        <th class="px-4 py-3 text-left">Texto chico</th>
                         <th class="px-4 py-3 text-center">Foto</th>
+                        <th class="px-4 py-3 text-left">Categoría</th>
+                        <th class="px-4 py-3 text-left">Fecha</th>
+                        <th class="px-4 py-3 text-left">Título</th>
                         <th class="px-4 py-3 text-center">Activo</th>
                         <th class="px-4 py-3 text-center">Acciones</th>
                         <th class="px-4 py-3 text-center">Destacado</th>
@@ -34,55 +35,42 @@
                 </thead>
 
                 <tbody id="novedade-tabla" class="text-gray-600">
-                    @foreach($novedades as $item)
+                    @foreach($items as $item)
                         <tr class="border-t hover:bg-gray-50 cursor-move" data-id="{{ $item->id }}">
-                            <td class="px-4 py-3">{{ $item->orden }}</td>
-                            <td class="px-4 py-3 w-64 max-w-64 truncate">{{ $item->titulo }}</td>
-                            <td class="px-4 py-3 w-64 max-w-64 truncate">{{ $item->texto_chico }}</td>
-
+                            <td class="px-4 py-3 text-left">
+                                {{ $item->orden }}
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 @if (!empty($item->foto))
-                                    <img src="{{ asset($item->foto) }}"
-                                         alt="{{ $item->titulo }}"
-                                         class="w-[60px] h-[60px] object-cover mx-auto rounded">
+                                    <img src="{{ asset($item->foto) }}" alt="" class="w-[60px] h-[60px] object-cover mx-auto rounded">
                                 @endif
                             </td>
-
+                            <td class="px-4 py-3 text-left">
+                                {{ \App\Support\Idiomas::texto($item->categoria?->nombre ?? $item->categoria?->titulo) }}
+                            </td>
+                            <td class="px-4 py-3 text-left">
+                                {{ optional($item->fecha)->format('d/m/Y') }}
+                            </td>
+                            <td class="px-4 py-3 text-left">
+                                {{ $item->titulo }}
+                            </td>
                             <td class="px-4 py-3 text-center">
-                                @if ($item->active)
-                                    <a href="{{ route('adm.novedade-switch', $item->id) }}"
-                                       class="badge bg-green-400 text-white px-4 py-2 rounded">
-                                        Activo
-                                    </a>
-                                @else
-                                    <a href="{{ route('adm.novedade-switch', $item->id) }}"
-                                       class="badge bg-red-400 text-white px-4 py-2 rounded">
-                                        Inactivo
-                                    </a>
-                                @endif
+                                <a href="{{ route('adm.novedade-switch', $item->id) }}"
+                                   class="badge {{ $item->active ? 'bg-green-400' : 'bg-red-400' }} text-white px-4 py-2 rounded">
+                                    {{ $item->active ? 'Activo' : 'Inactivo' }}
+                                </a>
                             </td>
-
-                            <td class="px-4 py-3 text-center space-x-2 font-bold">
-                                <a href="{{ route('adm.novedade-editor', $item->id) }}"
-                                   class="text-blue-600 hover:underline">Editar</a>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{{ route('adm.novedade-editor', $item->id) }}" class="text-blue-600 hover:underline font-bold">Editar</a>
                                 <span>|</span>
-                                <a href="{{ route('adm.novedade-destroy', $item->id) }}"
-                                   class="text-red-600 hover:underline">Borrar</a>
+                                <a href="{{ route('adm.novedade-destroy', $item->id) }}" class="text-red-600 hover:underline font-bold"
+                                   onclick="return confirm('¿Eliminar este registro?')">Borrar</a>
                             </td>
-
-                            {{-- destacado --}}
-                            <td class="px-4 py-3 text-center space-x-2">
-                                @if ($item->destacado)
-                                    <a href="{{ route('adm.novedade-destacado', $item->id) }}"
-                                       class="badge bg-green-400 text-white px-4 py-2 rounded">
-                                        Destacado
-                                    </a>
-                                @else
-                                    <a href="{{ route('adm.novedade-destacado', $item->id) }}"
-                                       class="badge bg-red-400 text-white px-4 py-2 rounded">
-                                        No destacado
-                                    </a>
-                                @endif
+                            <td class="px-4 py-3 text-center">
+                                <a href="{{ route('adm.novedade-destacado', $item->id) }}"
+                                   class="badge {{ $item->destacado ? 'bg-green-400' : 'bg-red-400' }} text-white px-4 py-2 rounded">
+                                    {{ $item->destacado ? 'Destacado' : 'No destacado' }}
+                                </a>
                             </td>
                         </tr>
                     @endforeach

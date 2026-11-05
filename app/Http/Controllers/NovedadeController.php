@@ -2,184 +2,117 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\GestionaArchivos;
 use App\Models\Novedade;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class NovedadeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    use GestionaArchivos;
+
     public function index()
     {
-        $novedades = Novedade::orderBy('orden')->get();
+        $items = Novedade::orderBy('orden')->get();
 
         return view('content.admin.novedade', [
-            'novedades' => $novedades
+            'items' => $items,
         ]);
     }
 
-    /**
-     * Mostrar formulario para crear una nueva novedad.
-     */
     public function create()
     {
-        return view('content.admin.novedade-creador');
+        return view('content.admin.novedade-creador', [
+            'item' => new Novedade(),
+            'categorias' => Categoria::all(),
+        ]);
     }
 
-    /**
-     * Guardar una nueva novedad en la base de datos.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-            'foto' => 'nullable|image|max:2048',
-        ]);
+        $this->validar($request);
 
-        $novedade = new Novedade();
-        $novedade->orden = $request->orden;
-        $novedade->texto_chico = $request->texto_chico;
-        $novedade->titulo = $request->titulo;
-        $novedade->texto = $request->texto;
-
-        // Manejo de imagen
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $name = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('images', $name, 'public');
-            $novedade->foto = Storage::url($path);
-        }
-
-        $novedade->save();
+        $item = new Novedade();
+        $this->completar($item, $request);
+        $item->save();
 
         return redirect()->route('adm.novedade')
-            ->with('success', 'Novedad creada correctamente.');
+            ->with('success', 'Registro creado correctamente.');
     }
 
-    /**
-     * Mostrar el editor de una novedad específica.
-     */
-    public function show($novedade_id)
+    public function show($id)
     {
-        $novedade = Novedade::findOrFail($novedade_id);
-
         return view('content.admin.novedade-editor', [
-            'novedade' => $novedade
+            'item' => Novedade::findOrFail($id),
+            'categorias' => Categoria::all(),
         ]);
     }
 
-    /**
-     * Actualizar una novedad existente.
-     */
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'foto' => 'nullable|image|max:2048',
-        ]);
+        $this->validar($request);
 
-        $novedade = Novedade::find($request->novedade_id) ?? new Novedade();
-
-        $novedade->orden = $request->orden;
-        $novedade->texto_chico = $request->texto_chico;
-        $novedade->titulo = $request->titulo;
-        $novedade->texto = $request->texto;
-
-        // Manejo de imagen
-        if ($request->hasFile('foto')) {
-
-            if (!empty($novedade->foto)) {
-                $oldPath = str_replace('/storage/', '', $novedade->foto);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
-
-            $file = $request->file('foto');
-            $name = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('images', $name, 'public');
-            $novedade->foto = Storage::url($path);
-        }
-
-        $novedade->save();
-
-        return redirect()->route('adm.novedade', [
-            'novedade' => $novedade->id
-        ])->with('success', 'Novedad actualizada correctamente.');
-    }
-
-    /**
-     * Eliminar una novedad.
-     */
-    public function destroy($novedade_id)
-    {
-        $novedade = Novedade::find($novedade_id);
-
-        if ($novedade) {
-
-            if (!empty($novedade->foto)) {
-                $imagePath = str_replace('/storage/', '', $novedade->foto);
-                if (Storage::disk('public')->exists($imagePath)) {
-                    Storage::disk('public')->delete($imagePath);
-                }
-            }
-
-            $novedade->delete();
-        }
+        $item = Novedade::findOrFail($id);
+        $this->completar($item, $request);
+        $item->save();
 
         return redirect()->route('adm.novedade')
-            ->with('success', 'Novedad eliminada correctamente.');
+            ->with('success', 'Registro actualizado correctamente.');
     }
 
-    /**
-     * Activar o desactivar una novedad.
-     */
-    public function switch($novedade_id)
+    public function destroy($id)
     {
-        $novedade = Novedade::findOrFail($novedade_id);
-        $novedade->active = !$novedade->active;
-        $novedade->save();
+        $item = Novedade::findOrFail($id);
+        $this->borrarArchivosDe($item, ['foto'], []);
+        $item->delete();
 
         return redirect()->route('adm.novedade')
-            ->with('success', 'Estado de la novedad actualizado correctamente.');
+            ->with('success', 'Registro eliminado correctamente.');
     }
 
-    /**
-     * Reordenar novedades (drag & drop).
-     */
+    public function switch($id)
+    {
+        $item = Novedade::findOrFail($id);
+        $item->active = !$item->active;
+        $item->save();
+
+        return redirect()->route('adm.novedade')
+            ->with('success', 'Estado actualizado correctamente.');
+    }
+
+    public function destacado($id)
+    {
+        $item = Novedade::findOrFail($id);
+        $item->destacado = !$item->destacado;
+        $item->save();
+
+        return redirect()->route('adm.novedade')
+            ->with('success', 'Destacado actualizado correctamente.');
+    }
+
     public function reordenar(Request $request)
     {
-        foreach ($request->orden as $item) {
-            Novedade::where('id', $item['id'])
-                ->update(['orden' => $item['orden']]);
+        foreach ($request->orden as $fila) {
+            Novedade::where('id', $fila['id'])->update(['orden' => $fila['orden']]);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Orden actualizado correctamente'
+        return response()->json(['success' => true]);
+    }
+
+    private function validar(Request $request): void
+    {
+        $request->validate([
+            'foto' => 'nullable|image|max:2048',
         ]);
     }
 
-    /**
-     * Marcar o desmarcar una novedad como destacada.
-     */
-    public function destacado($novedade_id)
+    private function completar(Novedade $item, Request $request): void
     {
-        $novedade = Novedade::findOrFail($novedade_id);
-        $novedade->destacado = !$novedade->destacado;
-        $novedade->save();
-
-        return redirect()->route('adm.novedade')
-            ->with('success', 'Destacado de la novedad actualizado correctamente.');
-    }
-
-    /**
-     * Detalle web de la novedad.
-     */
-    public function detalle($id)
-    {
-        $novedade = Novedade::findOrFail($id);
-
-        return view('content.web.novedade-detalle', compact('novedade'));
+        $item->categoria_id = $request->input('categoria_id') ?: null;
+        $item->orden = $request->input('orden');
+        $item->fecha = $request->filled('fecha') ? $request->input('fecha') : null;
+        $item->titulo = $request->input('titulo');
+        $item->foto = $this->procesarArchivo($request, 'foto', $item->foto, 'novedades');
+        $item->texto = $request->input('texto');
     }
 }

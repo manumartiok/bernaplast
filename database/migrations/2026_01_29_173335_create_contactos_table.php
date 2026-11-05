@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('contactos', function (Blueprint $table) {
             $table->id();
-            $table->decimal('latitud', 10, 8);
-            $table->decimal('longitud', 11, 8);
+            $table->decimal('latitud', 10, 8)->nullable();
+            $table->decimal('longitud', 11, 8)->nullable();
             $table->text('ubicacion')->nullable();
             $table->string('direccion')->nullable();
             $table->string('mail')->nullable();
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('instagram')->nullable();
             $table->string('facebook')->nullable();
             $table->string('whatssap')->nullable();
+            $table->string('foto')->nullable();
             $table->timestamps();
         });
     }

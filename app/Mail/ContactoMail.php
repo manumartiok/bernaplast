@@ -19,7 +19,8 @@ class ContactoMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Nuevo mensaje de contacto')
-                    ->view('emails.contacto'); // crear vista
+        return $this->subject('Nuevo mensaje de contacto' . (!empty($this->data['asunto']) ? ': ' . $this->data['asunto'] : ''))
+                    ->replyTo($this->data['email'], $this->data['nombre'])
+                    ->view('emails.contacto');
     }
 }

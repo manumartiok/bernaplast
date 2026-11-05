@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('home_banners', function (Blueprint $table) {
             $table->id();
             $table->string('orden')->nullable();
-            $table->string('foto');
+            $table->string('foto')->nullable();
             $table->string('tipo_medio')->default('imagen');
             $table->string('titulo')->nullable();
             $table->string('texto')->nullable();

@@ -20,25 +20,8 @@
             </div>
             <hr class="my-3">
 
-            <form method="POST" action="{{ route('adm.banner-update', $banner->seccion) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('adm.banner-update', $banner->seccion) }}">
                 @csrf
-
-                {{-- Foto --}}
-                <div class="mb-4 campo-archivo">
-                    <label class="block text-gray-700 font-medium mb-2">Foto (recomendado 1366x300) / (2MB tamaño máximo)</label>
-
-                    <img src="{{ $banner->foto }}" alt="Foto"
-                         class="vista-previa mb-3 w-full max-w-[1366px] h-[300px] object-cover {{ empty($banner->foto) ? 'hidden' : '' }}">
-
-                    <input type="file" name="foto" accept="image/*" onchange="previsualizarImagen(this)"
-                           class="w-full border border-gray-300 rounded px-4 py-2">
-
-                    @if (!empty($banner->foto))
-                        <label class="inline-flex items-center gap-2 mt-2 text-sm text-gray-600">
-                            <input type="checkbox" name="quitar_foto" value="1"> Quitar foto
-                        </label>
-                    @endif
-                </div>
 
                 {{-- Texto --}}
                 @if (Idiomas::esMultiple())
@@ -53,6 +36,23 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-2">Texto</label>
                         <input type="text" name="texto" value="{{ $banner->texto ?? '' }}"
+                               class="w-full border border-gray-300 rounded px-4 py-2">
+                    </div>
+                @endif
+
+                {{-- Subtítulo --}}
+                @if (Idiomas::esMultiple())
+                    @foreach (Idiomas::todos() as $idioma)
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-medium mb-2">Subtítulo ({{ Idiomas::nombre($idioma) }})</label>
+                            <input type="text" name="subtitulo[{{ $idioma }}]" value="{{ $banner->subtitulo[$idioma] ?? '' }}"
+                                   class="w-full border border-gray-300 rounded px-4 py-2">
+                        </div>
+                    @endforeach
+                @else
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Subtítulo</label>
+                        <input type="text" name="subtitulo" value="{{ $banner->subtitulo ?? '' }}"
                                class="w-full border border-gray-300 rounded px-4 py-2">
                     </div>
                 @endif

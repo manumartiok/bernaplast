@@ -25,7 +25,7 @@
                 <div>
                     <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-2" for="foto">
-                            Foto o Video (Imagen: 1366x626 recomendado | Foto: 2MB máximo | Video: 50MB máximo)
+                            Foto o Video (Imagen: 1366x768 recomendado | Foto: 2MB máximo | Video: 50MB máximo)
                         </label>
 
                         @if (!empty($home_banner->foto))
@@ -36,7 +36,7 @@
                                         Tu navegador no soporta el tag de video.
                                     </video>
                                 @else
-                                    <img src="{{ asset($home_banner->foto) }}" alt="Foto" class="w-full max-w-[1366px] h-[626px] object-cover">
+                                    <img src="{{ asset($home_banner->foto) }}" alt="Foto" class="w-full max-w-[1366px] h-[400px] object-cover">
                                 @endif
                             </div>
                         @endif

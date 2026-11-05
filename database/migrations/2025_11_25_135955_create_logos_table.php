@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('logos', function (Blueprint $table) {
             $table->id();
-            $table->string('foto_nav');
+            $table->string('foto_nav')->nullable();
             $table->string('foto_nav2')->nullable();
-            $table->string('foto_footer');
+            $table->string('foto_footer')->nullable();
             $table->timestamps();
         });
     }
