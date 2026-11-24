@@ -21,6 +21,7 @@ class Producto extends Model
         'medidas',
         'packaging',
         'apto',
+        'apto_archivo',
         'nota',
         'tapas',
         'active',
@@ -37,7 +38,7 @@ class Producto extends Model
     protected array $traducibles = [];
 
     // Subcampos de cada fila de tapas (para procesarLista / borrarArchivosDe)
-    public const SUBCAMPOS_TAPA = ['grupo' => 'string', 'color' => 'string', 'codigo' => 'string', 'foto' => 'imagen', 'descripcion' => 'text'];
+    public const SUBCAMPOS_TAPA = ['grupo' => 'string', 'color' => 'string', 'codigo' => 'string', 'foto' => 'imagen', 'foto_descripcion' => 'imagen', 'descripcion' => 'text'];
 
     // Valores posibles de "apto" y su texto
     public const APTOS = [

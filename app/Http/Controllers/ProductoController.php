@@ -75,7 +75,7 @@ class ProductoController extends Controller
     public function destroy($id)
     {
         $item = Producto::findOrFail($id);
-        $this->borrarArchivosDe($item, ['foto'], ['tapas' => Producto::SUBCAMPOS_TAPA]);
+        $this->borrarArchivosDe($item, ['foto', 'apto_archivo'],['tapas' => Producto::SUBCAMPOS_TAPA]);
         $item->delete();
 
         return redirect()->route('adm.producto')
@@ -139,7 +139,9 @@ class ProductoController extends Controller
     {
         $request->validate([
             'foto' => 'nullable|image|max:2048',
+            'apto_archivo' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,doc,docx|max:10240',
             'tapas.*.foto' => 'nullable|image|max:2048',
+            'tapas.*.foto_descripcion' => 'nullable|image|max:2048',
         ]);
     }
 
@@ -154,6 +156,7 @@ class ProductoController extends Controller
         $item->medidas = $request->input('medidas');
         $item->packaging = $request->input('packaging');
         $item->apto = array_key_exists((string) $request->input('apto'), Producto::APTOS) ? $request->input('apto') : null;
+        $item->apto_archivo = $this->procesarArchivo($request, 'apto_archivo', $item->apto_archivo, 'productos');
         $item->nota = $request->input('nota');
         $item->tapas = $this->procesarLista($request, 'tapas', Producto::SUBCAMPOS_TAPA, $item->tapas, 'productos');
     }

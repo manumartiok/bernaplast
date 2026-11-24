@@ -14,6 +14,8 @@
                 'indice'      => $i,
                 'color'       => $fila['color'],
                 'foto'        => $fila['foto'] ?? null,
+                // Foto que acompaña al texto explicativo; si no hay, se usa la del listado
+                'fotoDescripcion' => ($fila['foto_descripcion'] ?? null) ?: ($fila['foto'] ?? null),
                 'descripcion' => $fila['descripcion'],
             ];
         }
@@ -90,10 +92,18 @@
                 @endif
 
                 @if (isset(\App\Models\Producto::APTOS[$producto->apto]))
-                    <div class="flex gap-[7px]">
-                        <img src="{{ asset('assets/img/icons/apto-' . $producto->apto . '.svg') }}" alt="" width="26" height="26" class="w-[26px] h-[26px] mt-[3px] shrink-0 self-start">
-                        <h2 class="{{ $tituloDato }}">{{ \App\Models\Producto::APTOS[$producto->apto] }}</h2>
-                    </div>
+                    @php $aptoContenido = ['icono' => asset('assets/img/icons/apto-' . $producto->apto . '.svg'), 'texto' => \App\Models\Producto::APTOS[$producto->apto]]; @endphp
+                    @if ($producto->apto_archivo)
+                        <a href="{{ $producto->apto_archivo }}" target="_blank" rel="noopener" class="flex gap-[7px] hover:underline">
+                            <img src="{{ $aptoContenido['icono'] }}" alt="" width="26" height="26" class="w-[26px] h-[26px] mt-[3px] shrink-0 self-start">
+                            <h2 class="{{ $tituloDato }}">{{ $aptoContenido['texto'] }}</h2>
+                        </a>
+                    @else
+                        <div class="flex gap-[7px]">
+                            <img src="{{ $aptoContenido['icono'] }}" alt="" width="26" height="26" class="w-[26px] h-[26px] mt-[3px] shrink-0 self-start">
+                            <h2 class="{{ $tituloDato }}">{{ $aptoContenido['texto'] }}</h2>
+                        </div>
+                    @endif
                 @endif
             </div>
 
@@ -113,8 +123,9 @@
                     <h3 class="{{ $etiqueta }} uppercase">{{ $nombresGrupo[$g] }}</h3>
                     <div class="mt-[5px] flex gap-[12px]">
                         <div class="resumen-foto w-[92px] h-[80px] shrink-0 border border-linea rounded-[4px] overflow-hidden bg-fondo">
-                            @if (!empty($filas[0]['foto']))
-                                <img src="{{ $filas[0]['foto'] }}" alt="" class="w-full h-full object-cover">
+                            @php $fotoResumen = ($filas[0]['foto_descripcion'] ?? null) ?: ($filas[0]['foto'] ?? null); @endphp
+                            @if ($fotoResumen)
+                                <img src="{{ $fotoResumen }}" alt="" class="w-full h-full object-cover">
                             @endif
                         </div>
                         <p class="resumen-texto mt-[6px] {{ $textoDato }}">{{ $filas[0]['descripcion'] }}</p>
@@ -241,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-resumen]').forEach(r => r.classList.toggle('hidden', Number(r.dataset.resumen) !== grupo));
 
         const resumen = document.querySelector(`[data-resumen="${grupo}"]`);
-        resumen.querySelector('.resumen-foto').innerHTML = tapa.foto ? `<img src="${tapa.foto}" alt="" class="w-full h-full object-cover">` : '';
+        resumen.querySelector('.resumen-foto').innerHTML = tapa.fotoDescripcion ? `<img src="${tapa.fotoDescripcion}" alt="" class="w-full h-full object-cover">` : '';
         resumen.querySelector('.resumen-texto').textContent = tapa.descripcion || '';
 
         selectTapa.selectedIndex = grupo + 1; // la primera opción es "Elegir"

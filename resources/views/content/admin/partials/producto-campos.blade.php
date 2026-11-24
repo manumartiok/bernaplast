@@ -75,6 +75,21 @@
     </select>
 </div>
 
+{{-- Archivo del "Apto para" (se abre al hacer clic en la ficha del producto) --}}
+<div class="mb-4 campo-archivo">
+    <label class="block text-gray-700 font-medium mb-2">Archivo de "Apto para" (PDF o imagen; se abre al hacer clic en la ficha) (10MB máximo)</label>
+    @if (!empty($item->apto_archivo))
+        <a href="{{ $item->apto_archivo }}" target="_blank" class="block mb-2 text-blue-600 hover:underline">Ver archivo actual</a>
+    @endif
+    <input type="file" name="apto_archivo" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+           class="w-full border border-gray-300 rounded px-4 py-2">
+    @if (!empty($item->apto_archivo))
+        <label class="inline-flex items-center gap-2 mt-2 text-sm text-gray-600">
+            <input type="checkbox" name="quitar_apto_archivo" value="1"> Quitar archivo
+        </label>
+    @endif
+</div>
+
 {{-- Nota --}}
 <div class="mb-4">
     <label class="block text-gray-700 font-medium mb-2">Nota</label>
@@ -88,6 +103,7 @@
     $filaTapa = function ($i, $fila) {
         $v = fn ($k) => e($fila[$k] ?? '');
         $oculto = empty($fila['foto']) ? 'hidden' : '';
+        $ocultoDesc = empty($fila['foto_descripcion']) ? 'hidden' : '';
         // Selector de grupo: si el valor guardado no es uno de los tipos (p. ej. viene del Excel), se conserva como opción extra
         $actual = trim((string) ($fila['grupo'] ?? ''));
         $tipos = \App\Models\Producto::GRUPOS_TAPA;
@@ -116,12 +132,18 @@
                     <input type="text" name="tapas[{$i}][codigo]" value="{$v('codigo')}" class="w-full border border-gray-300 rounded px-4 py-2">
                 </div>
                 <div class="campo-archivo">
-                    <label class="block text-sm text-gray-600 mb-1">Foto (recomendado 600x496, reemplaza la foto principal al elegirla)</label>
+                    <label class="block text-sm text-gray-600 mb-1">Foto del listado (recomendado 600x496; es la miniatura de la tapa y reemplaza la foto principal al elegirla)</label>
                     <input type="hidden" name="tapas[{$i}][foto_actual]" value="{$v('foto')}">
                     <img src="{$v('foto')}" alt="" class="vista-previa h-[80px] object-cover rounded mb-2 {$oculto}">
                     <input type="file" name="tapas[{$i}][foto]" accept="image/*" onchange="previsualizarImagen(this)" class="w-full border border-gray-300 rounded px-4 py-2">
                 </div>
-                <div>
+                <div class="campo-archivo">
+                    <label class="block text-sm text-gray-600 mb-1">Foto de la descripción (se ve junto al texto explicativo al elegir la tapa; si no hay, se usa la foto del listado)</label>
+                    <input type="hidden" name="tapas[{$i}][foto_descripcion_actual]" value="{$v('foto_descripcion')}">
+                    <img src="{$v('foto_descripcion')}" alt="" class="vista-previa h-[80px] object-cover rounded mb-2 {$ocultoDesc}">
+                    <input type="file" name="tapas[{$i}][foto_descripcion]" accept="image/*" onchange="previsualizarImagen(this)" class="w-full border border-gray-300 rounded px-4 py-2">
+                </div>
+                <div class="md:col-span-2">
                     <label class="block text-sm text-gray-600 mb-1">Descripción (texto explicativo de la tapa)</label>
                     <textarea name="tapas[{$i}][descripcion]" rows="3" class="w-full border border-gray-300 rounded px-4 py-2">{$v('descripcion')}</textarea>
                 </div>

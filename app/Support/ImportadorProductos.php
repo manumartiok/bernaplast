@@ -24,7 +24,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
  *     ninguna        -> fila "TAPA a {tipo} sin guarnición sin precinto"
  *   El color de cada fila es la columna Color de la hoja Tapas.
  * - El resto de los campos (foto, características, medidas, packaging, apto, nota, destacado) se cargan a mano
- *   y la importación no los toca. De las tapas ya cargadas se conservan la foto y la descripción.
+ *   y la importación no los toca. De las tapas ya cargadas se conservan las fotos y la descripción.
  */
 class ImportadorProductos
 {
@@ -179,6 +179,7 @@ class ImportadorProductos
             'color'       => $color,
             'codigo'      => $codigoTapa,
             'foto'        => null,
+            'foto_descripcion' => null,
             'descripcion' => null,
         ], $grupos);
     }
@@ -227,6 +228,7 @@ class ImportadorProductos
         foreach ($nuevas as &$tapa) {
             $anterior = collect($anteriores)->first(fn ($a) => $clave($a) === $clave($tapa));
             $tapa['foto'] = $anterior['foto'] ?? null;
+            $tapa['foto_descripcion'] = $anterior['foto_descripcion'] ?? null;
             $tapa['descripcion'] = $anterior['descripcion'] ?? null;
         }
 
